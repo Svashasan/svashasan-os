@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DS Governance Overview</title>
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+    <style>
+      body { margin: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; background: #fffdf8; color: #1f2937; }
+      .wrap { max-width: 1080px; margin: 48px auto; padding: 0 20px; }
+      h1 { margin: 0 0 8px; }
+      .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+      .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; background: #fff; }
+      .tag { font-size: 12px; background: #f3f4f6; padding: 4px 8px; border-radius: 9999px; }
+      li { margin-bottom: 6px; }
+      @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Governance and Quality Gates</h1>
+      <p>Contribution rules, ADR requirements, release policies, and enterprise quality gates.</p>
+      <section class="cols">
+        <article class="card">
+          <span class="tag">Governance</span>
+          <h2>Contribution</h2>
+          <ul>
+            <li>ADR or ADR reference required</li>
+            <li>Tokenized styles only</li>
+            <li>Storybook docs mandatory</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="tag">Release</span>
+          <h2>Versioning</h2>
+          <ul>
+            <li>Changesets for semver and changelogs</li>
+            <li>Release workflow publishes packages</li>
+            <li>Storybook deployed from main</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="tag">Quality</span>
+          <h2>Gates</h2>
+          <ul>
+            <li>Lint + typecheck + tests</li>
+            <li>A11y and interaction checks</li>
+            <li>Visual regression approval</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

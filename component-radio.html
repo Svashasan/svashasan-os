@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Component - Radio</title>
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+    <style>
+      body { margin: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; background: #f8fafc; color: #0f172a; }
+      .wrap { max-width: 980px; margin: 40px auto; padding: 0 20px; }
+      h1 { margin: 0 0 8px; }
+      .sub { color: #475569; margin: 0 0 18px; }
+      .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+      .group { display: grid; gap: 10px; }
+      .option { display: flex; align-items: center; gap: 10px; }
+      input[type="radio"] {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid #64748b;
+        border-radius: 9999px;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+      }
+      input[type="radio"]::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        transform: scale(0);
+        transition: transform 120ms ease;
+        background: #1463ff;
+      }
+      input[type="radio"]:checked { border-color: #1463ff; }
+      input[type="radio"]:checked::before { transform: scale(1); }
+      input[type="radio"]:focus-visible { outline: 2px solid #1463ff; outline-offset: 2px; }
+      .muted { color: #475569; font-size: 13px; }
+      .disabled { opacity: 0.5; }
+      .inline { display: flex; gap: 16px; flex-wrap: wrap; }
+      .error { color: #dc2626; font-size: 13px; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Radio</h1>
+      <p class="sub">Single-select options with default, selected, disabled, inline, and validation states.</p>
+
+      <section class="card">
+        <h2>Default Group</h2>
+        <div class="group" role="radiogroup" aria-label="Environment">
+          <label class="option"><input type="radio" name="env" checked /> Development</label>
+          <label class="option"><input type="radio" name="env" /> Staging</label>
+          <label class="option"><input type="radio" name="env" /> Production</label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Inline Group</h2>
+        <div class="inline" role="radiogroup" aria-label="Density preference">
+          <label class="option"><input type="radio" name="density" checked /> Comfortable</label>
+          <label class="option"><input type="radio" name="density" /> Compact</label>
+          <label class="option"><input type="radio" name="density" /> Dense</label>
+        </div>
+        <p class="muted">Use inline only when labels are short and options are <= 4.</p>
+      </section>
+
+      <section class="card">
+        <h2>Disabled + Error</h2>
+        <div class="group" role="radiogroup" aria-label="Approval mode" aria-invalid="true">
+          <label class="option"><input type="radio" name="approval" /> Automatic</label>
+          <label class="option disabled"><input type="radio" name="approval" disabled /> Manual (not available)</label>
+        </div>
+        <p class="error">Select one approval mode to continue.</p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-density="comfortable">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enterprise DS - Phase 1 Foundations</title>
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+    <style>
+      :root {
+        --bg: #f7f8fb;
+        --panel: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #1463ff;
+        --border: #e2e8f0;
+        --success: #16a34a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at 10% 10%, #eef4ff, var(--bg) 35%);
+      }
+      .wrap { max-width: 1100px; margin: 48px auto; padding: 0 24px; }
+      .hero {
+        background: linear-gradient(120deg, #0f172a, #1e293b);
+        color: #fff;
+        border-radius: 16px;
+        padding: 36px;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
+      }
+      .hero h1 { margin: 0 0 10px; font-size: 34px; }
+      .hero p { margin: 0; color: #dbeafe; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 16px;
+        margin-top: 24px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px;
+      }
+      .card h2 { margin: 0 0 12px; font-size: 18px; }
+      .card p { margin: 0; color: var(--muted); font-size: 14px; }
+      .span-4 { grid-column: span 4; }
+      .span-6 { grid-column: span 6; }
+      .span-12 { grid-column: span 12; }
+      .chip {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 9999px;
+        background: #e8f0ff;
+        color: #0a3ea8;
+        font-size: 12px;
+        margin: 0 8px 8px 0;
+      }
+      ul { margin: 8px 0 0 18px; color: var(--muted); }
+      li { margin-bottom: 6px; }
+      .pipeline {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .step {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #fff;
+      }
+      .ok { color: var(--success); font-weight: 600; }
+      @media (max-width: 900px) {
+        .span-4, .span-6 { grid-column: span 12; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <h1>Enterprise Design System</h1>
+        <p>Phase 1: Foundations, tokens, governance, and Storybook baseline.</p>
+      </section>
+
+      <section class="grid">
+        <article class="card span-4">
+          <h2>Foundations</h2>
+          <div class="chip">Light/Dark</div><div class="chip">Brand Mode</div><div class="chip">Density Modes</div>
+          <p>Global + semantic + component token layers with runtime theme switching.</p>
+        </article>
+
+        <article class="card span-4">
+          <h2>Packages</h2>
+          <ul>
+            <li>@ds/tokens</li>
+            <li>@ds/styles</li>
+            <li>@ds/react</li>
+            <li>@ds/angular</li>
+            <li>@ds/html</li>
+          </ul>
+        </article>
+
+        <article class="card span-4">
+          <h2>Core Components</h2>
+          <ul>
+            <li>Button</li>
+            <li>TextField</li>
+            <li>Modal</li>
+            <li>Drawer</li>
+            <li>Table Skeleton (sorting)</li>
+          </ul>
+        </article>
+
+        <article class="card span-6">
+          <h2>Figma Workflow</h2>
+          <p>Tokens Studio bridge with code-first tokens as source of truth. Variable mapping supports theme, brand, and density modes.</p>
+        </article>
+
+        <article class="card span-6">
+          <h2>CI/CD</h2>
+          <div class="pipeline">
+            <div class="step">Validate Tokens</div>
+            <div class="step">Lint/Typecheck/Test</div>
+            <div class="step">Build Packages</div>
+            <div class="step">Deploy Storybook</div>
+            <div class="step">Release via Changesets</div>
+          </div>
+        </article>
+
+        <article class="card span-12">
+          <h2>Status</h2>
+          <p><span class="ok">Completed:</span> Repo scaffolding, ADRs, governance docs, token pipeline scripts, React MVP stories.</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

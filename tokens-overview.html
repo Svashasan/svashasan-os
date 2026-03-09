@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DS Tokens Overview</title>
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+    <style>
+      body { margin: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; background: #f8fafc; color: #0f172a; }
+      .wrap { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+      h1 { margin: 0 0 8px; font-size: 32px; }
+      .sub { color: #475569; margin-bottom: 24px; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+      .swatch { height: 44px; border-radius: 8px; border: 1px solid #cbd5e1; margin: 10px 0; }
+      .row { display: flex; justify-content: space-between; font-size: 13px; color: #334155; }
+      .chip { display: inline-block; padding: 5px 10px; border-radius: 9999px; background: #e2e8f0; margin: 4px 6px 0 0; font-size: 12px; }
+      @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Token Architecture</h1>
+      <p class="sub">Global -> Semantic -> Component tokens with Light/Dark/Brand and Density modes.</p>
+      <section class="grid">
+        <article class="card">
+          <h2>Global Colors</h2>
+          <div class="swatch" style="background:#1463ff"></div><div class="row"><span>global.color.blue.500</span><span>#1463ff</span></div>
+          <div class="swatch" style="background:#0f172a"></div><div class="row"><span>global.color.gray.900</span><span>#0f172a</span></div>
+          <div class="swatch" style="background:#dc2626"></div><div class="row"><span>global.color.red.500</span><span>#dc2626</span></div>
+        </article>
+        <article class="card">
+          <h2>Semantic Tokens</h2>
+          <div class="chip">semantic.surface.canvas</div>
+          <div class="chip">semantic.content.primary</div>
+          <div class="chip">semantic.action.primary</div>
+          <div class="chip">semantic.feedback.error</div>
+          <p>Semantic tokens switch by theme mode and brand mode.</p>
+        </article>
+        <article class="card">
+          <h2>Density Modes</h2>
+          <div class="row"><span>Comfortable</span><span>44px / 16px</span></div>
+          <div class="row"><span>Compact</span><span>40px / 14px</span></div>
+          <div class="row"><span>Dense</span><span>36px / 12px</span></div>
+          <p>Applied via <code>data-density</code> attributes.</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

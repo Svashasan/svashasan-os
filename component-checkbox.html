@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Component - Checkbox</title>
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+    <style>
+      body { margin: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; background: #f8fafc; color: #0f172a; }
+      .wrap { max-width: 980px; margin: 40px auto; padding: 0 20px; }
+      h1 { margin: 0 0 8px; }
+      .sub { color: #475569; margin: 0 0 18px; }
+      .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+      .group { display: grid; gap: 10px; }
+      .option { display: flex; align-items: center; gap: 10px; }
+      input[type="checkbox"] {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid #64748b;
+        border-radius: 4px;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        background: #fff;
+      }
+      input[type="checkbox"]::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
+        transform: scale(0);
+        transition: transform 120ms ease;
+        background: #fff;
+      }
+      input[type="checkbox"]:checked {
+        background: #1463ff;
+        border-color: #1463ff;
+      }
+      input[type="checkbox"]:checked::before { transform: scale(1); }
+      input[type="checkbox"]:focus-visible { outline: 2px solid #1463ff; outline-offset: 2px; }
+      input[type="checkbox"]:indeterminate {
+        background: #1463ff;
+        border-color: #1463ff;
+      }
+      .hint { color: #475569; font-size: 13px; }
+      .error { color: #dc2626; font-size: 13px; margin-top: 10px; }
+      .disabled { opacity: 0.5; }
+      .inline { display: flex; gap: 16px; flex-wrap: wrap; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Checkbox</h1>
+      <p class="sub">Multi-select options with checked, indeterminate, disabled, inline, and validation states.</p>
+
+      <section class="card">
+        <h2>Default Group</h2>
+        <div class="group" role="group" aria-label="Notification channels">
+          <label class="option"><input type="checkbox" checked /> Email alerts</label>
+          <label class="option"><input type="checkbox" /> SMS alerts</label>
+          <label class="option"><input type="checkbox" /> Push notifications</label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Inline + Indeterminate</h2>
+        <div class="inline" role="group" aria-label="Data export options">
+          <label class="option"><input id="select-all" type="checkbox" /> Select all</label>
+          <label class="option"><input type="checkbox" checked /> Users</label>
+          <label class="option"><input type="checkbox" /> Teams</label>
+          <label class="option"><input type="checkbox" checked /> Roles</label>
+        </div>
+        <p class="hint">Use indeterminate when parent reflects partial child selection.</p>
+      </section>
+
+      <section class="card">
+        <h2>Disabled + Error</h2>
+        <div class="group" role="group" aria-label="Compliance consent" aria-invalid="true">
+          <label class="option"><input type="checkbox" /> I accept the policy terms</label>
+          <label class="option disabled"><input type="checkbox" checked disabled /> Optional telemetry (locked by admin)</label>
+        </div>
+        <p class="error">You must accept the policy terms before continuing.</p>
+      </section>
+    </main>
+
+    <script>
+      const selectAll = document.getElementById('select-all');
+      if (selectAll) {
+        selectAll.indeterminate = true;
+      }
+    </script>
+  </body>
+</html>

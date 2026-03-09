@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Component - Button</title>
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+    <style>
+      body{margin:0;font-family:"IBM Plex Sans","Segoe UI",sans-serif;background:#f8fafc;color:#0f172a}
+      .wrap{max-width:980px;margin:40px auto;padding:0 20px}
+      h1{margin:0 0 8px}.sub{color:#475569;margin:0 0 20px}
+      .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:14px}
+      .row{display:flex;gap:10px;flex-wrap:wrap}
+      button{height:40px;padding:0 14px;border-radius:8px;font-weight:600;cursor:pointer;border:1px solid transparent}
+      .p{background:#1463ff;color:#fff}.s{background:#fff;border-color:#cbd5e1}.t{background:transparent;color:#1463ff}.d{background:#dc2626;color:#fff}
+      .icon{display:inline-flex;align-items:center;gap:8px}.split{display:inline-flex}.split button:first-child{border-top-right-radius:0;border-bottom-right-radius:0}.split button:last-child{border-top-left-radius:0;border-bottom-left-radius:0;padding:0 10px}
+      .disabled{opacity:.45;cursor:not-allowed}
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Button</h1>
+      <p class="sub">Variants, states, icon button, and split button.</p>
+      <section class="card"><h2>Variants</h2><div class="row"><button class="p">Primary</button><button class="s">Secondary</button><button class="t">Tertiary</button><button class="d">Destructive</button></div></section>
+      <section class="card"><h2>States</h2><div class="row"><button class="p">Default</button><button class="p">Hover</button><button class="p">Active</button><button class="p disabled" disabled>Disabled</button><button class="p" aria-busy="true">Loading...</button></div></section>
+      <section class="card"><h2>Icon + Split</h2><div class="row"><button class="p icon">⬇ Export</button><span class="split"><button class="p">Run</button><button class="p">▾</button></span></div></section>
+    </main>
+  </body>
+</html>

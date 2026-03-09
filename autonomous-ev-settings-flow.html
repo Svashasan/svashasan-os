@@ -1,0 +1,3246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Autonomous EV Settings Flow Prototype</title>
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+    <style>
+      :root {
+        --bg: #0f1319;
+        --surface: #25282e;
+        --surface-strong: #1b1e23;
+        --surface-soft: #2f333a;
+        --text: #f3f5f7;
+        --muted: #adb4bf;
+        --line: #474c55;
+        --accent: #30d46b;
+        --warning: #ff7f2a;
+        --danger: #ff4a5f;
+        --shadow: 0 24px 44px rgba(0, 0, 0, 0.34);
+      }
+
+      body[data-theme="day"] {
+        --bg: #d6dadf;
+        --surface: rgba(244, 246, 248, 0.92);
+        --surface-strong: #e8eaee;
+        --surface-soft: #f7f8fa;
+        --text: #242a31;
+        --muted: #5e6774;
+        --line: #c7ced9;
+        --accent: #10a550;
+        --warning: #d3651f;
+        --danger: #da3450;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(circle at 8% 10%, #262f3e, var(--bg) 42%);
+        color: var(--text);
+        font-family: "Sora", "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      .hmi-stage {
+        min-height: 100vh;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .map-layer {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0) 26%, rgba(0, 0, 0, 0.2)),
+          linear-gradient(45deg, rgba(117, 126, 145, 0.11) 12%, transparent 12% 88%, rgba(117, 126, 145, 0.11) 88%),
+          repeating-linear-gradient(170deg, transparent 0 34px, rgba(92, 103, 123, 0.14) 34px 36px),
+          repeating-linear-gradient(80deg, transparent 0 76px, rgba(92, 103, 123, 0.08) 76px 78px);
+        z-index: 0;
+      }
+
+      .top-strip {
+        position: relative;
+        z-index: 3;
+        height: 76px;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        backdrop-filter: blur(10px);
+        background: rgba(14, 17, 22, 0.58);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      body[data-theme="day"] .top-strip {
+        background: rgba(236, 240, 245, 0.9);
+        border-bottom-color: rgba(0, 0, 0, 0.08);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: clamp(20px, 2vw, 38px);
+        font-weight: 520;
+        letter-spacing: 0.01em;
+      }
+
+      .status-core {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: clamp(14px, 1.1vw, 20px);
+      }
+
+      .meta-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon-chip,
+      .meta-button,
+      .state-chip,
+      .entry-pill,
+      .dock-button,
+      .action-button,
+      .select-chip,
+      .inline-button {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        border-radius: 12px;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .icon-chip {
+        height: 34px;
+        width: 34px;
+        border-radius: 50%;
+        font-size: 13px;
+      }
+
+      .meta-button {
+        height: 36px;
+        padding: 0 14px;
+      }
+
+      .state-bar {
+        position: relative;
+        z-index: 3;
+        padding: 10px 24px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .state-chip {
+        padding: 7px 12px;
+        font-size: 13px;
+      }
+
+      .state-chip.active {
+        border-color: rgba(48, 212, 107, 0.7);
+        background: rgba(48, 212, 107, 0.2);
+      }
+
+      .cockpit {
+        position: relative;
+        z-index: 2;
+        padding: 12px 24px 128px;
+        display: grid;
+        grid-template-columns: minmax(320px, 46%) 1fr;
+        gap: 18px;
+        min-height: calc(100vh - 132px);
+      }
+
+      .drive-panel {
+        background: linear-gradient(140deg, rgba(34, 37, 43, 0.96), rgba(28, 31, 36, 0.84));
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 26px;
+        box-shadow: var(--shadow);
+        padding: 24px 22px;
+        display: grid;
+        grid-template-rows: auto 1fr auto auto;
+        gap: 16px;
+      }
+
+      body[data-theme="day"] .drive-panel {
+        background: linear-gradient(160deg, rgba(252, 253, 255, 0.96), rgba(233, 237, 242, 0.92));
+      }
+
+      .drive-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .gear-badge {
+        height: 102px;
+        width: 102px;
+        border-radius: 22px;
+        display: grid;
+        place-items: center;
+        font-size: 78px;
+        font-weight: 600;
+        background: rgba(48, 212, 107, 0.13);
+        border: 1px solid rgba(48, 212, 107, 0.35);
+        color: #67f096;
+      }
+
+      .speed-stack {
+        text-align: right;
+      }
+
+      .speed-stack h1 {
+        margin: 0;
+        font-size: clamp(34px, 4.1vw, 76px);
+        font-weight: 650;
+        letter-spacing: 0.01em;
+      }
+
+      .speed-stack p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .car-wrap {
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: radial-gradient(circle at 45% 45%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.16));
+        display: grid;
+        place-items: center;
+        min-height: 300px;
+        position: relative;
+      }
+
+      .car-wrap::before,
+      .car-wrap::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+      }
+
+      .car-wrap::before {
+        inset: 14% 8%;
+      }
+
+      .car-wrap::after {
+        inset: 24% 18%;
+      }
+
+      .car-pill {
+        width: min(62%, 250px);
+        aspect-ratio: 0.62;
+        border-radius: 38% 38% 41% 41% / 28% 28% 50% 50%;
+        background: linear-gradient(130deg, #d5dee6, #8f9baa 48%, #d9e2ea);
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.16);
+        position: relative;
+      }
+
+      .car-pill::before {
+        content: "";
+        position: absolute;
+        inset: 16% 18%;
+        border-radius: 32%;
+        background: linear-gradient(140deg, rgba(9, 14, 20, 0.9), rgba(45, 55, 68, 0.9));
+      }
+
+      .car-alert {
+        position: absolute;
+        right: 12%;
+        top: 24%;
+        height: 92px;
+        width: 18px;
+        border-radius: 999px;
+        background: linear-gradient(to bottom, rgba(255, 0, 0, 0), rgba(255, 70, 70, 0.92), rgba(255, 0, 0, 0));
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: 1.5fr repeat(2, 1fr);
+        gap: 14px;
+      }
+
+      .metric-card {
+        border-radius: 16px;
+        padding: 12px;
+        background: rgba(15, 18, 23, 0.56);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      body[data-theme="day"] .metric-card {
+        background: rgba(251, 252, 255, 0.8);
+      }
+
+      .metric-card small {
+        color: var(--muted);
+        display: block;
+      }
+
+      .metric-card strong {
+        margin-top: 6px;
+        display: block;
+        font-size: 34px;
+      }
+
+      .battery-bar {
+        margin-top: 8px;
+        width: 100%;
+        height: 24px;
+        border-radius: 13px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+      }
+
+      .battery-bar span {
+        display: grid;
+        place-items: center;
+        height: 100%;
+        width: 72%;
+        background: linear-gradient(90deg, #20b35a, #44df7e);
+        color: #f8fff8;
+        font-weight: 550;
+        font-size: 13px;
+      }
+
+      .map-panel {
+        border-radius: 26px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        position: relative;
+        background: rgba(18, 20, 25, 0.72);
+      }
+
+      body[data-theme="day"] .map-panel {
+        background: rgba(240, 244, 248, 0.9);
+      }
+
+      .map-search {
+        margin: 22px 18px 0;
+        border-radius: 18px;
+        min-height: 64px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(18, 21, 27, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        font-size: clamp(18px, 2vw, 30px);
+      }
+
+      body[data-theme="day"] .map-search {
+        background: rgba(255, 255, 255, 0.86);
+      }
+
+      .map-filters {
+        margin: 14px 18px 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+      }
+
+      .entry-pill {
+        height: 34px;
+        padding: 0 12px;
+        border-radius: 10px;
+        font-size: 13px;
+      }
+
+      .route-line {
+        position: absolute;
+        inset: 150px 6% 120px 6%;
+      }
+
+      .route-line svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .route-card {
+        position: absolute;
+        left: 20px;
+        right: 160px;
+        bottom: 72px;
+        min-height: 64px;
+        border-radius: 17px;
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        background: rgba(20, 22, 27, 0.77);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+        font-size: clamp(18px, 2vw, 38px);
+      }
+
+      body[data-theme="day"] .route-card {
+        background: rgba(246, 249, 252, 0.96);
+      }
+
+      .action-stack {
+        position: absolute;
+        right: 18px;
+        bottom: 22px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .action-button {
+        height: 84px;
+        width: 84px;
+        border-radius: 50%;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .action-button.sos {
+        border-color: rgba(255, 74, 95, 0.7);
+        background: radial-gradient(circle at 40% 30%, #ff8e9f, #ff415a);
+        color: #fff;
+      }
+
+      .action-button.call {
+        border-color: rgba(59, 219, 102, 0.7);
+        background: radial-gradient(circle at 40% 30%, #4ed97f, #26a955);
+        color: #fff;
+      }
+
+      .inline-button {
+        border-radius: 999px;
+        height: 54px;
+        padding: 0 22px;
+        background: rgba(36, 193, 96, 0.88);
+        border-color: rgba(58, 223, 121, 0.76);
+        color: #f5fff8;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .bottom-dock {
+        position: absolute;
+        z-index: 4;
+        left: 28px;
+        bottom: 20px;
+        width: min(45%, 740px);
+        min-width: 320px;
+        border-radius: 18px;
+        background: rgba(85, 90, 98, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 10px;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+      }
+
+      body[data-theme="day"] .bottom-dock {
+        background: rgba(232, 236, 242, 0.97);
+      }
+
+      .dock-button {
+        border-radius: 12px;
+        min-height: 74px;
+        padding: 8px 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: clamp(12px, 1vw, 16px);
+        line-height: 1.25;
+      }
+
+      .dock-button.active {
+        border-color: rgba(255, 255, 255, 0.32);
+        background: rgba(0, 0, 0, 0.21);
+      }
+
+      .module-overlay {
+        position: absolute;
+        z-index: 16;
+        right: 24px;
+        top: 94px;
+        width: min(44%, 720px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(27, 30, 36, 0.92);
+        box-shadow: var(--shadow);
+        display: none;
+        flex-direction: column;
+        max-height: calc(100vh - 134px);
+      }
+
+      body[data-theme="day"] .module-overlay {
+        background: rgba(245, 248, 252, 0.95);
+      }
+
+      .module-overlay.open {
+        display: flex;
+      }
+
+      .module-head {
+        min-height: 66px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px 10px 16px;
+      }
+
+      .module-head h2 {
+        margin: 0;
+        font-size: clamp(22px, 1.8vw, 30px);
+      }
+
+      .module-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .module-close {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        min-height: 36px;
+        min-width: 78px;
+        padding: 0 12px;
+        background: rgba(0, 0, 0, 0.22);
+        color: var(--text);
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .module-grid {
+        padding: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+        gap: 10px;
+        overflow: auto;
+      }
+
+      .module-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 11px;
+        background: var(--surface-soft);
+      }
+
+      .module-card h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .module-card p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .module-chip {
+        margin-top: 8px;
+        display: inline-block;
+        padding: 5px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .settings-overlay {
+        position: absolute;
+        z-index: 22;
+        inset: 94px 24px 20px;
+        display: none;
+        flex-direction: column;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .settings-overlay.open {
+        display: flex;
+      }
+
+      .settings-head {
+        min-height: 74px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px 0 20px;
+      }
+
+      .settings-head h2 {
+        margin: 0;
+        font-size: clamp(26px, 2vw, 34px);
+      }
+
+      .close-button {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        min-height: 42px;
+        min-width: 94px;
+        padding: 0 14px;
+        background: rgba(0, 0, 0, 0.25);
+        color: var(--text);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .settings-grid {
+        height: calc(100% - 74px);
+        display: grid;
+        grid-template-columns: minmax(278px, 37%) 1fr;
+      }
+
+      .settings-sidebar {
+        border-right: 1px solid var(--line);
+        padding: 14px;
+        overflow: auto;
+      }
+
+      .entry-points {
+        margin-bottom: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .entry-points .entry-pill {
+        height: 32px;
+        padding: 0 10px;
+      }
+
+      .category-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .category-button {
+        border: 1px solid transparent;
+        border-radius: 12px;
+        min-height: 56px;
+        background: transparent;
+        color: var(--text);
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 10px;
+        text-align: left;
+        padding: 10px 12px;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .category-button.active {
+        border-color: var(--line);
+        background: rgba(0, 0, 0, 0.26);
+      }
+
+      .category-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 650;
+        color: var(--muted);
+      }
+
+      .category-label {
+        font-size: clamp(17px, 1.1vw, 26px);
+      }
+
+      .category-meta {
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .settings-main {
+        padding: 14px 18px 18px;
+        overflow: auto;
+      }
+
+      .context-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .status-pill {
+        padding: 7px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        font-size: 13px;
+      }
+
+      .status-pill.warn {
+        border-color: rgba(255, 127, 42, 0.7);
+        background: rgba(255, 127, 42, 0.18);
+      }
+
+      .status-pill.ok {
+        border-color: rgba(48, 212, 107, 0.64);
+        background: rgba(48, 212, 107, 0.14);
+      }
+
+      .level-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(120px, 1fr));
+        gap: 9px;
+        margin-bottom: 16px;
+      }
+
+      .grid-button {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        min-height: 60px;
+        padding: 8px 10px;
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .grid-button.active {
+        border-color: rgba(48, 212, 107, 0.64);
+        background: rgba(48, 212, 107, 0.14);
+      }
+
+      .grid-button strong {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .grid-button span {
+        font-size: 14px;
+      }
+
+      .category-header h3 {
+        margin: 0;
+        font-size: clamp(28px, 2.1vw, 38px);
+      }
+
+      .category-header p {
+        margin: 5px 0 0;
+        color: var(--muted);
+      }
+
+      .warning-box {
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-top: 10px;
+        border: 1px solid rgba(255, 127, 42, 0.7);
+        background: rgba(255, 127, 42, 0.16);
+        font-size: 14px;
+      }
+
+      .section-list {
+        margin-top: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .section-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.14);
+      }
+
+      .section-card summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 14px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px 8px;
+      }
+
+      .section-card summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .section-card summary strong {
+        font-size: clamp(18px, 1.1vw, 24px);
+      }
+
+      .section-card summary span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .section-card summary em {
+        color: var(--muted);
+        font-style: normal;
+        font-size: 12px;
+      }
+
+      .section-content {
+        border-top: 1px dashed var(--line);
+        padding: 10px 12px 12px;
+        display: grid;
+        gap: 9px;
+      }
+
+      .setting-card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface-soft);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .setting-card p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .setting-card.is-disabled {
+        opacity: 0.55;
+      }
+
+      .control-note {
+        color: var(--warning);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      .toggle {
+        width: 54px;
+        height: 30px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        position: relative;
+        background: #4b5160;
+        cursor: pointer;
+      }
+
+      .toggle::after {
+        content: "";
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #fff;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.2s ease;
+      }
+
+      .toggle[data-on="true"] {
+        background: #2dbb68;
+      }
+
+      .toggle[data-on="true"]::after {
+        transform: translateX(24px);
+      }
+
+      .select-control,
+      .range-control {
+        min-width: 170px;
+      }
+
+      .select-control {
+        min-height: 38px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        padding: 0 10px;
+        color: var(--text);
+        background: rgba(0, 0, 0, 0.22);
+        font: inherit;
+      }
+
+      .range-wrap {
+        min-width: 190px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .range-wrap output {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .range-control {
+        accent-color: #2dbb68;
+      }
+
+      .action-row {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: var(--surface-soft);
+      }
+
+      .action-row button {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-height: 34px;
+        padding: 0 12px;
+        color: var(--text);
+        background: rgba(0, 0, 0, 0.24);
+        cursor: pointer;
+      }
+
+      .action-row button.danger {
+        border-color: rgba(255, 74, 95, 0.7);
+        background: rgba(255, 74, 95, 0.2);
+      }
+
+      .inline-feedback {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        min-height: 20px;
+      }
+
+      .safety-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 12, 15, 0.72);
+        backdrop-filter: blur(6px);
+      }
+
+      .safety-modal.open {
+        display: flex;
+      }
+
+      .safety-dialog {
+        width: min(560px, calc(100% - 24px));
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: #1d2026;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      body[data-theme="day"] .safety-dialog {
+        background: #f8fafd;
+      }
+
+      .safety-dialog h4 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+
+      .safety-dialog p {
+        margin: 0 0 10px;
+        color: var(--muted);
+      }
+
+      .safety-box {
+        border: 1px solid rgba(255, 127, 42, 0.75);
+        background: rgba(255, 127, 42, 0.16);
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 12px;
+      }
+
+      .safety-dialog label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .safety-dialog input[type="text"] {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        min-height: 38px;
+        padding: 0 10px;
+        color: var(--text);
+        background: rgba(0, 0, 0, 0.25);
+        font: inherit;
+      }
+
+      .safety-actions {
+        margin-top: 14px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .safety-actions button {
+        border-radius: 10px;
+        min-height: 40px;
+        min-width: 102px;
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.24);
+        color: var(--text);
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .safety-actions button.primary {
+        border-color: rgba(48, 212, 107, 0.7);
+        background: rgba(48, 212, 107, 0.22);
+      }
+
+      .safety-actions button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      @media (max-width: 1220px) {
+        .cockpit {
+          grid-template-columns: 1fr;
+          min-height: auto;
+        }
+
+        .bottom-dock {
+          position: static;
+          margin: 0 24px 18px;
+          width: calc(100% - 48px);
+          min-width: 0;
+        }
+
+        .settings-overlay {
+          inset: 92px 12px 12px;
+        }
+
+        .module-overlay {
+          left: 24px;
+          right: 24px;
+          width: auto;
+        }
+      }
+
+      @media (max-width: 960px) {
+        .top-strip {
+          padding: 0 14px;
+          height: auto;
+          min-height: 76px;
+          flex-wrap: wrap;
+          row-gap: 8px;
+          padding-top: 10px;
+          padding-bottom: 10px;
+        }
+
+        .state-bar {
+          padding: 8px 14px 0;
+          flex-wrap: wrap;
+        }
+
+        .cockpit {
+          padding: 10px 14px 18px;
+        }
+
+        .settings-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .module-overlay {
+          top: 118px;
+          left: 12px;
+          right: 12px;
+          max-height: calc(100vh - 182px);
+        }
+
+        .settings-sidebar {
+          border-right: none;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .category-list {
+          display: flex;
+          gap: 8px;
+          overflow: auto;
+          padding-bottom: 4px;
+        }
+
+        .category-button {
+          min-width: 220px;
+        }
+
+        .level-grid {
+          grid-template-columns: repeat(3, minmax(120px, 1fr));
+        }
+      }
+
+      @media (max-width: 680px) {
+        .metrics {
+          grid-template-columns: 1fr;
+        }
+
+        .drive-head {
+          align-items: flex-start;
+          gap: 10px;
+        }
+
+        .route-card {
+          right: 18px;
+          font-size: 19px;
+          min-height: 54px;
+        }
+
+        .action-button {
+          height: 66px;
+          width: 66px;
+          font-size: 12px;
+        }
+
+        .bottom-dock {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .module-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .level-grid {
+          grid-template-columns: repeat(2, minmax(120px, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="night">
+    <div class="hmi-stage">
+      <div class="map-layer"></div>
+
+      <header class="top-strip">
+        <div class="brand">
+          <span class="icon-chip">EV</span>
+          <span>Vansh's EV</span>
+        </div>
+
+        <div class="status-core">
+          <strong id="clockLabel">9:41 PM</strong>
+          <span id="themeStatus">Night UI</span>
+          <span>17 C</span>
+        </div>
+
+        <div class="meta-actions">
+          <button class="meta-button" id="themeToggle">Switch Theme</button>
+          <button class="icon-chip" title="Device">DP</button>
+          <button class="icon-chip" title="Alerts">AL</button>
+        </div>
+      </header>
+
+      <div class="state-bar">
+        <button class="state-chip active" data-drive-state="parked">Parked</button>
+        <button class="state-chip" data-drive-state="crawling">Crawling</button>
+        <button class="state-chip" data-drive-state="cruise">Cruise</button>
+      </div>
+
+      <main class="cockpit">
+        <section class="drive-panel">
+          <div class="drive-head">
+            <div class="gear-badge" id="gearDisplay">P</div>
+            <div class="speed-stack">
+              <h1><span id="speedValue">0</span> kmph</h1>
+              <p id="driveModeLabel">Static parked mode</p>
+            </div>
+          </div>
+
+          <div class="car-wrap">
+            <div class="car-pill"></div>
+            <div class="car-alert"></div>
+          </div>
+
+          <div class="metrics">
+            <article class="metric-card">
+              <small>Battery information</small>
+              <div class="battery-bar"><span>26h 3m Remaining</span></div>
+            </article>
+            <article class="metric-card">
+              <small>Range</small>
+              <strong>356</strong>
+            </article>
+            <article class="metric-card">
+              <small>RPM</small>
+              <strong>1400</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="map-panel">
+          <div class="map-search">
+            <span>Search for locations</span>
+            <span>SR</span>
+          </div>
+
+          <div class="map-filters">
+            <button class="entry-pill" data-open-settings="energyCharging">EV Stations</button>
+            <button class="entry-pill">Hotels</button>
+            <button class="entry-pill">Stay</button>
+            <button class="entry-pill" data-open-settings="drivingAutonomy">ADAS Shortcut</button>
+          </div>
+
+          <div class="route-line">
+            <svg viewBox="0 0 600 420" preserveAspectRatio="none">
+              <polyline
+                fill="none"
+                stroke="#d3d629"
+                stroke-width="5"
+                points="60,340 180,300 220,250 280,240 330,190 420,180 480,100"
+              />
+              <circle cx="220" cy="250" r="9" fill="#ff7f2a" />
+              <polygon points="480,100 492,120 468,120" fill="#ff7f2a" />
+            </svg>
+          </div>
+
+          <div class="route-card">
+            <span>Take right in 300 metres</span>
+            <span>1 min</span>
+          </div>
+
+          <button class="inline-button" style="position: absolute; left: 18px; bottom: 14px">Recenter</button>
+
+          <div class="action-stack">
+            <button class="action-button sos">SOS</button>
+            <button class="action-button call">CALL</button>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-dock">
+        <button class="dock-button active" data-module="dashboard">Menu</button>
+        <button class="dock-button" data-module="lights">Light</button>
+        <button class="dock-button" data-module="music">Music</button>
+        <button class="dock-button" data-module="climate">A/C</button>
+        <button class="dock-button" data-module="radio">Radio</button>
+        <button class="dock-button" data-module="settings">Settings</button>
+      </nav>
+
+      <section class="module-overlay" id="moduleOverlay" aria-hidden="true">
+        <div class="module-head">
+          <div>
+            <h2 id="moduleTitle">Dashboard</h2>
+            <p id="moduleDescription">Cockpit home experience.</p>
+          </div>
+          <button class="module-close" id="moduleCloseButton">Close</button>
+        </div>
+        <div class="module-grid" id="moduleGrid"></div>
+      </section>
+
+      <section class="settings-overlay" id="settingsOverlay" aria-hidden="true">
+        <div class="settings-head">
+          <h2>Settings</h2>
+          <button class="close-button" id="closeSettingsButton">Close</button>
+        </div>
+
+        <div class="settings-grid">
+          <aside class="settings-sidebar">
+            <div class="entry-points">
+              <button class="entry-pill" data-open-settings="general">Home Launcher</button>
+              <button class="entry-pill" data-open-settings="general">Quick Controls</button>
+              <button class="entry-pill" data-open-settings="general">Voice Command</button>
+              <button class="entry-pill" data-open-settings="drivingAutonomy">Context Shortcut</button>
+            </div>
+            <div class="category-list" id="categoryList"></div>
+          </aside>
+
+          <section class="settings-main">
+            <div class="context-bar">
+              <span class="status-pill ok" id="readOnlyBadge">Editable mode (Parked)</span>
+              <button class="entry-pill" data-open-settings="general" id="voiceFallbackButton">
+                Voice fallback: "Open vehicle settings"
+              </button>
+            </div>
+
+            <div class="level-grid" id="levelOneGrid"></div>
+
+            <header class="category-header">
+              <h3 id="categoryTitle"></h3>
+              <p id="categoryDescription"></p>
+            </header>
+
+            <div id="categoryWarning"></div>
+            <div class="section-list" id="sectionList"></div>
+            <div class="inline-feedback" id="inlineFeedback"></div>
+          </section>
+        </div>
+      </section>
+    </div>
+
+    <section class="safety-modal" id="safetyModal" aria-modal="true" role="dialog" aria-labelledby="safetyTitle">
+      <div class="safety-dialog">
+        <h4 id="safetyTitle">Safety Confirmation Required</h4>
+        <p id="safetyText">This control changes autonomous driving behavior.</p>
+        <div class="safety-box">
+          Driver acknowledgment is required for autonomy and reset actions. Continue only when the vehicle is parked.
+        </div>
+        <label>
+          <input type="checkbox" id="safetyAckCheck" />
+          I confirm the vehicle is safely parked and I understand the implications.
+        </label>
+        <label for="safetyAckPhrase">Type I UNDERSTAND to continue:</label>
+        <input id="safetyAckPhrase" type="text" autocomplete="off" />
+        <div class="safety-actions">
+          <button id="safetyCancelButton">Cancel</button>
+          <button class="primary" id="safetyConfirmButton" disabled>Confirm</button>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const DRIVE_STATES = {
+        parked: { label: "Static parked mode", gear: "P", speed: 0 },
+        crawling: { label: "Low-speed crawl with proximity warnings", gear: "D", speed: 16 },
+        cruise: { label: "Cruise mode with autonomy monitoring", gear: "D", speed: 72 }
+      };
+
+      const MODULE_VIEWS = {
+        lights: {
+          title: "Light Controls",
+          description: "Exterior, ambient, and route-adaptive lighting controls.",
+          cards: [
+            { title: "Exterior", detail: "Auto headlight profile and beam adaptation.", status: "Auto adaptive" },
+            { title: "Ambient Scene", detail: "Cabin themes synchronized to drive mode.", status: "Calm night" },
+            { title: "Welcome Sequence", detail: "Unlock and departure light choreography.", status: "Enabled" },
+            { title: "Energy Saver", detail: "Dim interior when battery is low.", status: "Auto" }
+          ]
+        },
+        music: {
+          title: "Media Hub",
+          description: "Driver profile media, sources, and focus mode presets.",
+          cards: [
+            { title: "Now Playing", detail: "Context-aware playlist for night driving.", status: "Lo-fi route mix" },
+            { title: "Source", detail: "Bluetooth phone, streaming, or local media.", status: "Bluetooth" },
+            { title: "Cabin Zones", detail: "Tune volume by front/rear occupancy.", status: "Front priority" },
+            { title: "Voice Queue", detail: "Hands-free queue and skip commands.", status: "Enabled" }
+          ]
+        },
+        climate: {
+          title: "Climate and Comfort",
+          description: "Cabin HVAC, seat comfort, and preconditioning widgets.",
+          cards: [
+            { title: "HVAC", detail: "Dual-zone target and blower mode.", status: "22 C Auto" },
+            { title: "Seat Comfort", detail: "Heat/ventilation by active profile.", status: "Driver heat low" },
+            { title: "Cabin Precondition", detail: "Pre-cool before next route start.", status: "Scheduled 08:30" },
+            { title: "Air Quality", detail: "Particle and CO2 monitoring.", status: "Good" }
+          ]
+        },
+        radio: {
+          title: "Radio and Comms",
+          description: "Radio stations, traffic feed, and emergency broadcast tuning.",
+          cards: [
+            { title: "Traffic Feed", detail: "Live city traffic and incident briefings.", status: "Urban FM 104.4" },
+            { title: "Emergency Broadcast", detail: "Priority override channel settings.", status: "Monitored" },
+            { title: "Favorites", detail: "Driver profile station presets.", status: "8 saved" },
+            { title: "Signal Profile", detail: "Automatic switch between FM and digital.", status: "Auto" }
+          ]
+        }
+      };
+
+      const SETTINGS_MODEL = [
+        {
+          id: "general",
+          icon: "GE",
+          label: "General",
+          description: "Language, startup behavior, alerts, accessibility, and privacy defaults.",
+          status: "8 modules",
+          sections: [
+            {
+              id: "language-region",
+              title: "Language and region",
+              status: "English (IN)",
+              description: "Interface and voice locale selection.",
+              items: [
+                {
+                  type: "select",
+                  key: "systemLanguage",
+                  label: "System language",
+                  description: "Choose primary cockpit language.",
+                  options: ["English (IN)", "English (US)", "Hindi"],
+                  default: "English (IN)",
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "measurementUnits",
+                  label: "Units",
+                  description: "Speed and distance presentation.",
+                  options: ["Metric (km)", "Imperial (mi)"],
+                  default: "Metric (km)",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "date-time",
+              title: "Date and time",
+              status: "Auto sync",
+              description: "Network and GPS clock synchronization.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "autoTimeSync",
+                  label: "Automatic time sync",
+                  description: "Adjust clock from network and GPS.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "timeFormat",
+                  label: "Clock format",
+                  description: "Use 12-hour or 24-hour format.",
+                  options: ["12-hour", "24-hour"],
+                  default: "12-hour",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "startup-shutdown",
+              title: "Startup and shutdown behavior",
+              status: "Last mode resume",
+              description: "How cockpit and ADAS initialize.",
+              items: [
+                {
+                  type: "select",
+                  key: "startupProfile",
+                  label: "Startup profile",
+                  description: "Restore previous profile or ask each drive.",
+                  options: ["Resume last profile", "Prompt each start"],
+                  default: "Resume last profile",
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "shutdownSummary",
+                  label: "Show shutdown energy summary",
+                  description: "Display trip + battery insights at shutdown.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "notifications-alerts",
+              title: "Notifications and alerts",
+              status: "Priority alerts",
+              description: "Prioritize warnings while reducing noise.",
+              items: [
+                {
+                  type: "select",
+                  key: "alertPriority",
+                  label: "Alert priority mode",
+                  description: "Set high-priority delivery strategy.",
+                  options: ["Safety first", "Balanced", "Minimal"],
+                  default: "Safety first",
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "spokenAlerts",
+                  label: "Spoken alerts",
+                  description: "Voice announce critical warnings.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "sounds-haptics",
+              title: "Sounds and haptics",
+              status: "Medium",
+              description: "Feedback levels for touch and alerts.",
+              items: [
+                {
+                  type: "range",
+                  key: "hapticsLevel",
+                  label: "Haptics intensity",
+                  description: "Touch vibration strength.",
+                  default: 60,
+                  min: 0,
+                  max: 100,
+                  step: 5,
+                  unit: "%",
+                  mutates: true
+                },
+                {
+                  type: "range",
+                  key: "uiVolume",
+                  label: "UI sounds",
+                  description: "Volume for non-critical UI cues.",
+                  default: 45,
+                  min: 0,
+                  max: 100,
+                  step: 5,
+                  unit: "%",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "accessibility",
+              title: "Accessibility",
+              status: "Enhanced text",
+              description: "High-contrast and readable interaction modes.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "highContrast",
+                  label: "High-contrast mode",
+                  description: "Improve visibility in sunlight and glare.",
+                  default: false,
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "largeTargets",
+                  label: "Large touch targets",
+                  description: "Increase hit areas for key actions.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "privacy-data",
+              title: "Privacy and data",
+              status: "Managed",
+              description: "Control telemetry and diagnostics sharing.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "analyticsSharing",
+                  label: "Anonymous analytics sharing",
+                  description: "Help improve performance and UX quality.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "locationHistory",
+                  label: "Store location history",
+                  description: "Keep trip history for insights.",
+                  default: false,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "quick-controls",
+              title: "Quick controls customization",
+              status: "Dock personalized",
+              description: "Set shortcuts in launcher and swipe controls.",
+              items: [
+                {
+                  type: "select",
+                  key: "dockPreset",
+                  label: "Dock preset",
+                  description: "Choose module set in home dock.",
+                  options: ["Driving focus", "Comfort focus", "Balanced"],
+                  default: "Balanced",
+                  mutates: true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "vehicle",
+          icon: "VH",
+          label: "Vehicle",
+          description: "Physical vehicle controls and status.",
+          status: "5 modules",
+          sections: [
+            {
+              id: "lights",
+              title: "Lights",
+              status: "Auto",
+              description: "Exterior and ambient cabin lighting.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "autoHeadlights",
+                  label: "Automatic headlights",
+                  description: "Enable adaptive exterior lights.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "ambientTheme",
+                  label: "Ambient lighting theme",
+                  description: "Customize cabin lighting mood.",
+                  options: ["Calm", "Aurora", "Focus"],
+                  default: "Calm",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "mirrors-wipers",
+              title: "Mirrors and wipers",
+              status: "Rain sensing",
+              description: "Mirror fold and wiper response profile.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "autoMirrorFold",
+                  label: "Auto mirror fold",
+                  description: "Fold mirrors when parked and locked.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "wiperSensitivity",
+                  label: "Auto wiper sensitivity",
+                  description: "Rain detection aggressiveness.",
+                  options: ["Low", "Medium", "High"],
+                  default: "Medium",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "doors-locks",
+              title: "Doors and locks",
+              status: "Walk-away lock",
+              description: "Access behavior for driver and passengers.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "walkAwayLock",
+                  label: "Walk-away lock",
+                  description: "Lock automatically when key exits range.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "unlockOnApproach",
+                  label: "Unlock on approach",
+                  description: "Unlock driver door when key detected.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "trunk-frunk",
+              title: "Trunk and frunk",
+              status: "Soft close",
+              description: "Control opening limits and assist mode.",
+              items: [
+                {
+                  type: "select",
+                  key: "trunkOpenHeight",
+                  label: "Trunk open height",
+                  description: "Set safe maximum opening height.",
+                  options: ["Low garage", "Standard", "Maximum"],
+                  default: "Standard",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "vehicle-status",
+              title: "Vehicle status (read-only)",
+              status: "Healthy",
+              description: "Real-time health summary from sensors.",
+              items: [
+                {
+                  type: "info",
+                  label: "Tire pressure",
+                  value: "Front 34 psi / Rear 35 psi"
+                },
+                {
+                  type: "info",
+                  label: "Brake system",
+                  value: "No anomalies detected"
+                },
+                {
+                  type: "info",
+                  label: "Last diagnostics",
+                  value: "12 mins ago"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "drivingAutonomy",
+          icon: "DA",
+          label: "Driving and Autonomy",
+          description: "ADAS, autonomous mode, handover logic, and explainability.",
+          status: "Critical",
+          sections: [
+            {
+              id: "driving-assistance",
+              title: "Driving assistance",
+              status: "Adaptive profile",
+              description: "Core assistance systems for L2/L3 operations.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "adaptiveCruise",
+                  label: "Adaptive cruise control",
+                  description: "Maintain gap and speed in traffic.",
+                  default: true,
+                  mutates: true,
+                  safetyGate: true
+                },
+                {
+                  type: "toggle",
+                  key: "laneKeeping",
+                  label: "Lane keeping assist",
+                  description: "Assist steering within lane boundaries.",
+                  default: true,
+                  mutates: true,
+                  safetyGate: true
+                },
+                {
+                  type: "toggle",
+                  key: "trafficJamAssist",
+                  label: "Traffic jam assist",
+                  description: "Low-speed stop and go support.",
+                  default: true,
+                  mutates: true,
+                  safetyGate: true
+                },
+                {
+                  type: "toggle",
+                  key: "blindSpotMonitoring",
+                  label: "Blind spot monitoring",
+                  description: "Visual and haptic side alerts.",
+                  default: true,
+                  mutates: true,
+                  safetyGate: true
+                }
+              ]
+            },
+            {
+              id: "autonomous-driving",
+              title: "Autonomous driving",
+              status: "L2 active",
+              description: "Autonomy level, mode enablement, and confirmations.",
+              items: [
+                {
+                  type: "info",
+                  label: "Autonomy level information",
+                  value: "Current capability: L2 (limited L3 pilot)"
+                },
+                {
+                  type: "toggle",
+                  key: "autonomousMode",
+                  label: "Enable autonomous mode",
+                  description: "Required for approved ODD routes.",
+                  default: false,
+                  mutates: true,
+                  safetyGate: true
+                }
+              ]
+            },
+            {
+              id: "odd",
+              title: "Operational design domain (ODD)",
+              status: "Highway + parking",
+              description: "Define where autonomous mode may operate.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "oddHighway",
+                  label: "Highways",
+                  description: "Allow autonomy on mapped highways.",
+                  default: true,
+                  mutates: true,
+                  safetyGate: true
+                },
+                {
+                  type: "toggle",
+                  key: "oddCity",
+                  label: "City streets",
+                  description: "Allow autonomy in supported urban zones.",
+                  default: false,
+                  mutates: true,
+                  safetyGate: true
+                },
+                {
+                  type: "toggle",
+                  key: "oddParking",
+                  label: "Parking",
+                  description: "Allow autonomous parking maneuvers.",
+                  default: true,
+                  mutates: true,
+                  safetyGate: true
+                }
+              ]
+            },
+            {
+              id: "driver-monitoring",
+              title: "Driver monitoring",
+              status: "Eye + hand monitoring",
+              description: "Check engagement and takeover readiness.",
+              items: [
+                {
+                  type: "select",
+                  key: "driverMonitoringSensitivity",
+                  label: "Monitoring sensitivity",
+                  description: "How quickly inattentive behavior is flagged.",
+                  options: ["Conservative", "Balanced", "Strict"],
+                  default: "Balanced",
+                  mutates: true,
+                  safetyGate: true
+                }
+              ]
+            },
+            {
+              id: "driving-preferences",
+              title: "Driving preferences",
+              status: "Comfort steering",
+              description: "Steering, braking, and acceleration feel.",
+              items: [
+                {
+                  type: "select",
+                  key: "steeringFeel",
+                  label: "Steering feel",
+                  description: "Tuning for steering weight.",
+                  options: ["Comfort", "Standard", "Sport"],
+                  default: "Comfort",
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "brakeResponse",
+                  label: "Brake response",
+                  description: "Pedal-to-deceleration profile.",
+                  options: ["Soft", "Balanced", "Direct"],
+                  default: "Balanced",
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "accelResponse",
+                  label: "Acceleration response",
+                  description: "Throttle aggressiveness.",
+                  options: ["Eco", "Normal", "Dynamic"],
+                  default: "Normal",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "handover-settings",
+              title: "Handover settings and takeover alerts",
+              status: "Driver first",
+              description: "Configure alert timing and fallback behavior.",
+              items: [
+                {
+                  type: "select",
+                  key: "takeoverLeadTime",
+                  label: "Takeover lead time",
+                  description: "How early takeover alerts fire.",
+                  options: ["5 seconds", "8 seconds", "12 seconds"],
+                  default: "8 seconds",
+                  mutates: true,
+                  safetyGate: true
+                },
+                {
+                  type: "action",
+                  action: "simulateTakeover",
+                  label: "Simulate takeover alert",
+                  description: "Preview cluster + haptic + audio fallback.",
+                  critical: true
+                }
+              ]
+            },
+            {
+              id: "transparency",
+              title: "Transparency and trust",
+              status: "Explainability on",
+              description: "Explain why autonomy made specific decisions.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "whyCarDidThis",
+                  label: "Show 'why the car did this'",
+                  description: "Expose confidence and intent explanations.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "confidenceMeter",
+                  label: "Display confidence meter",
+                  description: "Show confidence score for autonomous maneuvers.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "energyCharging",
+          icon: "EC",
+          label: "Energy and Charging",
+          description: "Battery insights, charging profiles, and regenerative behavior.",
+          status: "EV core",
+          sections: [
+            {
+              id: "battery-status",
+              title: "Battery status",
+              status: "72% / healthy",
+              description: "Current state of charge and battery health.",
+              items: [
+                {
+                  type: "info",
+                  label: "State of charge",
+                  value: "72%"
+                },
+                {
+                  type: "info",
+                  label: "Battery health",
+                  value: "96% estimated capacity"
+                },
+                {
+                  type: "info",
+                  label: "Thermal state",
+                  value: "Optimal"
+                }
+              ]
+            },
+            {
+              id: "charging",
+              title: "Charging",
+              status: "Scheduled at night",
+              description: "Charge limit, schedule, and preferred chargers.",
+              items: [
+                {
+                  type: "range",
+                  key: "chargeLimit",
+                  label: "Charge limit",
+                  description: "Maximum battery target for daily charging.",
+                  default: 85,
+                  min: 50,
+                  max: 100,
+                  step: 5,
+                  unit: "%",
+                  mutates: true,
+                  safetyGate: true
+                },
+                {
+                  type: "select",
+                  key: "chargingSchedule",
+                  label: "Scheduled charging",
+                  description: "Start charging during preferred tariff window.",
+                  options: ["Off", "22:00 - 06:00", "00:00 - 06:00"],
+                  default: "22:00 - 06:00",
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "preferredCharger",
+                  label: "Preferred chargers",
+                  description: "Default network in route planning.",
+                  options: ["Any", "Fast DC only", "Home first"],
+                  default: "Any",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "regen",
+              title: "Regenerative braking",
+              status: "Medium",
+              description: "Energy recovery profile.",
+              items: [
+                {
+                  type: "select",
+                  key: "regenLevel",
+                  label: "Regeneration level",
+                  description: "Low, medium, or high one-pedal effect.",
+                  options: ["Low", "Medium", "High"],
+                  default: "Medium",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "range-efficiency",
+              title: "Range and efficiency",
+              status: "Insights enabled",
+              description: "Energy consumption and efficiency coaching.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "efficiencyCoaching",
+                  label: "Efficiency coaching prompts",
+                  description: "Offer route and speed optimization cues.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "info",
+                  label: "Last 100 km efficiency",
+                  value: "14.8 kWh / 100 km"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "displaysControls",
+          icon: "DC",
+          label: "Displays and Controls",
+          description: "Cluster, center display, HUD, and steering controls.",
+          status: "4 modules",
+          sections: [
+            {
+              id: "cluster",
+              title: "Instrument cluster",
+              status: "Navigation priority",
+              description: "Cluster layout and information ranking.",
+              items: [
+                {
+                  type: "select",
+                  key: "clusterLayout",
+                  label: "Layout style",
+                  description: "Switch between map-first or speed-first views.",
+                  options: ["Navigation focus", "Performance focus", "Minimal"],
+                  default: "Navigation focus",
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "clusterPriority",
+                  label: "Information priority",
+                  description: "Most prominent signal in the cluster.",
+                  options: ["Safety alerts", "Navigation", "Energy"],
+                  default: "Safety alerts",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "center-display",
+              title: "Center display",
+              status: "Auto brightness",
+              description: "Brightness and day/night mode.",
+              items: [
+                {
+                  type: "range",
+                  key: "displayBrightness",
+                  label: "Display brightness",
+                  description: "Backlight for center display.",
+                  default: 72,
+                  min: 20,
+                  max: 100,
+                  step: 2,
+                  unit: "%",
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "dayNightMode",
+                  label: "Day/night mode",
+                  description: "Force day or night visual style.",
+                  options: ["Auto", "Day", "Night"],
+                  default: "Auto",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "hud",
+              title: "HUD content",
+              status: "Navigation + alerts",
+              description: "Select projected HUD information.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "hudEnabled",
+                  label: "Enable HUD",
+                  description: "Project driving data to windshield HUD.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "hudContent",
+                  label: "HUD content set",
+                  description: "Data group shown in HUD.",
+                  options: ["Navigation + safety", "Speed only", "Full data"],
+                  default: "Navigation + safety",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "steering-controls",
+              title: "Steering wheel controls",
+              status: "Left scroll = media",
+              description: "Map wheel inputs to preferred quick actions.",
+              items: [
+                {
+                  type: "select",
+                  key: "leftWheelAction",
+                  label: "Left scroll action",
+                  description: "Primary mapping for left steering wheel input.",
+                  options: ["Media", "Navigation zoom", "ADAS gap"],
+                  default: "Media",
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "rightWheelAction",
+                  label: "Right scroll action",
+                  description: "Primary mapping for right steering wheel input.",
+                  options: ["Cruise speed", "Voice", "Cluster page"],
+                  default: "Cruise speed",
+                  mutates: true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "comfortClimate",
+          icon: "CC",
+          label: "Comfort and Climate",
+          description: "Cabin climate, seats, and ambient experience.",
+          status: "3 modules",
+          sections: [
+            {
+              id: "climate",
+              title: "Climate control",
+              status: "Dual zone auto",
+              description: "Zone-specific climate controls and auto/manual mode.",
+              items: [
+                {
+                  type: "select",
+                  key: "climateMode",
+                  label: "Climate mode",
+                  description: "Automatic or manual cabin control.",
+                  options: ["Auto", "Manual"],
+                  default: "Auto",
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "climateZones",
+                  label: "Zone setup",
+                  description: "Single or dual-zone comfort.",
+                  options: ["Single zone", "Dual zone"],
+                  default: "Dual zone",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "seat-settings",
+              title: "Seat settings",
+              status: "Memory enabled",
+              description: "Seat heating, ventilation, and memory.",
+              items: [
+                {
+                  type: "select",
+                  key: "seatHeatLevel",
+                  label: "Seat heating",
+                  description: "Heating level preset.",
+                  options: ["Off", "Low", "Medium", "High"],
+                  default: "Low",
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "seatVentilation",
+                  label: "Seat ventilation",
+                  description: "Enable active seat cooling.",
+                  default: false,
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "seatMemorySync",
+                  label: "Memory profile sync",
+                  description: "Sync seat memory with active profile.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "cabin-experience",
+              title: "Cabin experience",
+              status: "Calm",
+              description: "Ambient themes and fragrance control.",
+              items: [
+                {
+                  type: "select",
+                  key: "cabinTheme",
+                  label: "Ambient theme",
+                  description: "Overall visual and audio cabin mood.",
+                  options: ["Calm", "Focus", "Energetic"],
+                  default: "Calm",
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "fragranceMode",
+                  label: "Fragrance",
+                  description: "Cabin scent mode (if installed).",
+                  options: ["Off", "Soft", "Medium"],
+                  default: "Off",
+                  mutates: true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "safetySecurity",
+          icon: "SS",
+          label: "Safety and Security",
+          description: "Occupant safety, vehicle security, and emergency actions.",
+          status: "3 modules",
+          sections: [
+            {
+              id: "occupant-safety",
+              title: "Driver and occupant safety",
+              status: "Alerts enabled",
+              description: "Child lock and speed alert preferences.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "childLockRear",
+                  label: "Rear child lock",
+                  description: "Restrict rear door operation from inside.",
+                  default: false,
+                  mutates: true
+                },
+                {
+                  type: "range",
+                  key: "speedAlertLimit",
+                  label: "Speed alert limit",
+                  description: "Soft warning threshold.",
+                  default: 80,
+                  min: 40,
+                  max: 140,
+                  step: 5,
+                  unit: "kmph",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "vehicle-security",
+              title: "Vehicle security",
+              status: "Armed",
+              description: "Alarm and immobilizer behavior.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "alarmEnabled",
+                  label: "Vehicle alarm",
+                  description: "Enable intrusion alarm system.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "immobilizerEnabled",
+                  label: "Immobilizer",
+                  description: "Require authenticated profile to drive.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "emergency",
+              title: "Emergency settings",
+              status: "SOS + breakdown active",
+              description: "Emergency call and roadside assistance flow.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "autoSosAfterCrash",
+                  label: "Auto SOS after crash detection",
+                  description: "Automatically place emergency call on severe events.",
+                  default: true,
+                  mutates: true,
+                  safetyGate: true
+                },
+                {
+                  type: "action",
+                  action: "testEmergencyFlow",
+                  label: "Run emergency dry test",
+                  description: "Verify SOS and breakdown workflow without dispatch.",
+                  critical: true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "connectivity",
+          icon: "CN",
+          label: "Connectivity",
+          description: "Bluetooth, Wi-Fi, cellular network, and V2X.",
+          status: "5 modules",
+          sections: [
+            {
+              id: "bluetooth",
+              title: "Bluetooth",
+              status: "2 paired",
+              description: "Pair and prioritize connected devices.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "bluetoothEnabled",
+                  label: "Bluetooth",
+                  description: "Enable pairing and media over Bluetooth.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "select",
+                  key: "priorityDevice",
+                  label: "Priority device",
+                  description: "Device used first for calls/media.",
+                  options: ["Vansh Phone", "Fleet Tablet", "None"],
+                  default: "Vansh Phone",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "wifi",
+              title: "Wi-Fi",
+              status: "Garage network",
+              description: "Manage trusted Wi-Fi and hotspot behavior.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "wifiEnabled",
+                  label: "Wi-Fi",
+                  description: "Connect to known Wi-Fi networks.",
+                  default: true,
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "wifiHotspot",
+                  label: "Vehicle hotspot",
+                  description: "Share mobile network with passengers.",
+                  default: false,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "mobile-network",
+              title: "Mobile network",
+              status: "5G auto",
+              description: "Cellular mode and data profile.",
+              items: [
+                {
+                  type: "select",
+                  key: "networkMode",
+                  label: "Network mode",
+                  description: "Choose preferred radio mode.",
+                  options: ["Auto 5G/LTE", "LTE only", "Low data"],
+                  default: "Auto 5G/LTE",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "device-management",
+              title: "Device management",
+              status: "Trusted",
+              description: "Manage connected devices and permissions.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "autoPairKnownDevices",
+                  label: "Auto-pair known devices",
+                  description: "Reconnect previously trusted devices.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "v2x",
+              title: "Vehicle-to-everything (V2X)",
+              status: "Enabled",
+              description: "Share and consume road hazard data.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "v2xEnabled",
+                  label: "V2X exchange",
+                  description: "Send and receive traffic safety events.",
+                  default: true,
+                  mutates: true,
+                  safetyGate: true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "appsMedia",
+          icon: "AM",
+          label: "Apps and Media",
+          description: "Installed apps, permissions, media input, and updates.",
+          status: "4 modules",
+          sections: [
+            {
+              id: "installed-apps",
+              title: "Installed apps",
+              status: "12 apps",
+              description: "Manage lifecycle of cabin apps.",
+              items: [
+                {
+                  type: "info",
+                  label: "Recent installs",
+                  value: "AudioHub, RouteCinema"
+                },
+                {
+                  type: "action",
+                  action: "openAppManager",
+                  label: "Open app manager",
+                  description: "Enable, disable, or uninstall apps."
+                }
+              ]
+            },
+            {
+              id: "app-permissions",
+              title: "App permissions",
+              status: "Managed",
+              description: "Grant location, mic, and contacts access.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "appsCanUseLocation",
+                  label: "Apps can use location",
+                  description: "Allow third-party apps to access location.",
+                  default: false,
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "appsCanUseMicrophone",
+                  label: "Apps can use microphone",
+                  description: "Permit voice-enabled app features.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "media-sources",
+              title: "Media sources",
+              status: "Bluetooth + streaming",
+              description: "Set primary audio/video source.",
+              items: [
+                {
+                  type: "select",
+                  key: "defaultMediaSource",
+                  label: "Default media source",
+                  description: "Source used on startup.",
+                  options: ["Bluetooth", "Streaming", "USB"],
+                  default: "Bluetooth",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "app-updates",
+              title: "App store and updates",
+              status: "Auto update on Wi-Fi",
+              description: "Control app updates and refresh windows.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "autoUpdateApps",
+                  label: "Auto update apps",
+                  description: "Install app updates on trusted Wi-Fi.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "systemSoftware",
+          icon: "SW",
+          label: "System and Software",
+          description: "OTA updates, diagnostics, storage, reset, and legal.",
+          status: "5 modules",
+          sections: [
+            {
+              id: "software-updates",
+              title: "Software updates (OTA)",
+              status: "v3.2.1",
+              description: "Vehicle OS and firmware update controls.",
+              items: [
+                {
+                  type: "info",
+                  label: "Current version",
+                  value: "EV OS v3.2.1"
+                },
+                {
+                  type: "action",
+                  action: "checkForUpdates",
+                  label: "Check for updates",
+                  description: "Pull latest OTA metadata."
+                }
+              ]
+            },
+            {
+              id: "diagnostics",
+              title: "System diagnostics",
+              status: "No critical faults",
+              description: "Run health checks for key modules.",
+              items: [
+                {
+                  type: "action",
+                  action: "runDiagnostics",
+                  label: "Run diagnostics",
+                  description: "Trigger a quick health sweep."
+                }
+              ]
+            },
+            {
+              id: "storage",
+              title: "Storage",
+              status: "68% used",
+              description: "Storage utilization and cleanup controls.",
+              items: [
+                {
+                  type: "info",
+                  label: "Storage utilization",
+                  value: "68% used (41.2 GB / 60 GB)"
+                }
+              ]
+            },
+            {
+              id: "reset",
+              title: "Reset options",
+              status: "Protected",
+              description: "Soft reset and factory reset controls.",
+              items: [
+                {
+                  type: "action",
+                  action: "softReset",
+                  label: "Soft reboot cockpit",
+                  description: "Restart UI processes only.",
+                  critical: true
+                },
+                {
+                  type: "action",
+                  action: "factoryReset",
+                  label: "Factory reset vehicle profile data",
+                  description: "Erase user settings and paired data.",
+                  critical: true,
+                  danger: true
+                }
+              ]
+            },
+            {
+              id: "legal",
+              title: "Legal and compliance",
+              status: "Up to date",
+              description: "Regional compliance and notices.",
+              items: [
+                {
+                  type: "info",
+                  label: "Compliance package",
+                  value: "India + EU ADAS clauses active"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "profilePersonalization",
+          icon: "PP",
+          label: "Profile and Personalization",
+          description: "Driver profiles, sync behavior, and privacy controls.",
+          status: "4 modules",
+          sections: [
+            {
+              id: "profiles",
+              title: "Driver profiles",
+              status: "Vansh active",
+              description: "Load and manage profile presets.",
+              items: [
+                {
+                  type: "select",
+                  key: "activeProfile",
+                  label: "Active profile",
+                  description: "Current profile in use.",
+                  options: ["Vansh", "Guest", "Fleet Operator"],
+                  default: "Vansh",
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "seat-mirror-sync",
+              title: "Seat and mirror sync",
+              status: "Synced",
+              description: "Apply profile-based position settings.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "syncSeatMirror",
+                  label: "Sync seat and mirrors",
+                  description: "Apply saved posture on profile switch.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "driving-sync",
+              title: "Driving preferences sync",
+              status: "Cloud sync",
+              description: "Sync preferred driving behavior across vehicles.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "syncDrivingPrefs",
+                  label: "Sync driving preferences",
+                  description: "Share acceleration/steering profile to cloud.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            },
+            {
+              id: "privacy-controls",
+              title: "Privacy controls and data sharing permissions",
+              status: "Granular",
+              description: "Fine-grain data permissions by profile.",
+              items: [
+                {
+                  type: "toggle",
+                  key: "shareDriverBehaviorData",
+                  label: "Share driver behavior data",
+                  description: "Allow anonymized behavior analytics.",
+                  default: false,
+                  mutates: true
+                },
+                {
+                  type: "toggle",
+                  key: "shareAutonomySessionData",
+                  label: "Share autonomy session data",
+                  description: "Provide autonomy trace data for improvements.",
+                  default: true,
+                  mutates: true
+                }
+              ]
+            }
+          ]
+        }
+      ];
+
+      const CONTROL_INDEX = {};
+      const appState = {
+        selectedCategory: "general",
+        driveState: "parked",
+        controls: {},
+        pendingSafety: null,
+        settingsOpen: false,
+        currentModule: "dashboard"
+      };
+
+      const moduleOverlay = document.getElementById("moduleOverlay");
+      const moduleTitle = document.getElementById("moduleTitle");
+      const moduleDescription = document.getElementById("moduleDescription");
+      const moduleGrid = document.getElementById("moduleGrid");
+      const categoryList = document.getElementById("categoryList");
+      const levelOneGrid = document.getElementById("levelOneGrid");
+      const sectionList = document.getElementById("sectionList");
+      const categoryTitle = document.getElementById("categoryTitle");
+      const categoryDescription = document.getElementById("categoryDescription");
+      const categoryWarning = document.getElementById("categoryWarning");
+      const inlineFeedback = document.getElementById("inlineFeedback");
+      const readOnlyBadge = document.getElementById("readOnlyBadge");
+      const settingsOverlay = document.getElementById("settingsOverlay");
+      const safetyModal = document.getElementById("safetyModal");
+      const safetyText = document.getElementById("safetyText");
+      const safetyAckCheck = document.getElementById("safetyAckCheck");
+      const safetyAckPhrase = document.getElementById("safetyAckPhrase");
+      const safetyConfirmButton = document.getElementById("safetyConfirmButton");
+
+      const gearDisplay = document.getElementById("gearDisplay");
+      const speedValue = document.getElementById("speedValue");
+      const driveModeLabel = document.getElementById("driveModeLabel");
+
+      function setDockActive(moduleId) {
+        document.querySelectorAll("[data-module]").forEach((button) => {
+          button.classList.toggle("active", button.dataset.module === moduleId);
+        });
+      }
+
+      function closeModuleOverlay() {
+        moduleOverlay.classList.remove("open");
+        moduleOverlay.setAttribute("aria-hidden", "true");
+      }
+
+      function renderModuleOverlay() {
+        if (appState.currentModule === "dashboard" || appState.currentModule === "settings") {
+          closeModuleOverlay();
+          return;
+        }
+
+        const moduleState = MODULE_VIEWS[appState.currentModule];
+        if (!moduleState) {
+          closeModuleOverlay();
+          return;
+        }
+
+        moduleTitle.textContent = moduleState.title;
+        moduleDescription.textContent = moduleState.description;
+        moduleGrid.innerHTML = moduleState.cards
+          .map((card) => {
+            return `
+              <article class="module-card">
+                <h3>${safeText(card.title)}</h3>
+                <p>${safeText(card.detail)}</p>
+                <span class="module-chip">${safeText(card.status)}</span>
+              </article>
+            `;
+          })
+          .join("");
+
+        moduleOverlay.classList.add("open");
+        moduleOverlay.setAttribute("aria-hidden", "false");
+      }
+
+      function switchModule(moduleId) {
+        if (moduleId === "settings") {
+          openSettings(appState.selectedCategory);
+          return;
+        }
+
+        closeSettings();
+        appState.currentModule = moduleId;
+        setDockActive(moduleId);
+        renderModuleOverlay();
+      }
+
+      function initializeControls() {
+        SETTINGS_MODEL.forEach((category) => {
+          category.sections.forEach((section) => {
+            section.items.forEach((item) => {
+              if (item.key) {
+                CONTROL_INDEX[item.key] = item;
+                if (item.default !== undefined) {
+                  appState.controls[item.key] = item.default;
+                }
+              }
+            });
+          });
+        });
+      }
+
+      function getCurrentCategory() {
+        return SETTINGS_MODEL.find((item) => item.id === appState.selectedCategory) || SETTINGS_MODEL[0];
+      }
+
+      function isReadOnly(item) {
+        return appState.driveState !== "parked" && item.mutates;
+      }
+
+      function safeText(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+
+      function renderCategoryNavigation() {
+        categoryList.innerHTML = SETTINGS_MODEL.map((category) => {
+          const activeClass = category.id === appState.selectedCategory ? "active" : "";
+          return `
+            <button class="category-button ${activeClass}" data-category-id="${category.id}">
+              <span class="category-icon">${category.icon}</span>
+              <span class="category-label">${category.label}</span>
+              <span class="category-meta">${category.status}</span>
+            </button>
+          `;
+        }).join("");
+
+        levelOneGrid.innerHTML = SETTINGS_MODEL.map((category) => {
+          const activeClass = category.id === appState.selectedCategory ? "active" : "";
+          return `
+            <button class="grid-button ${activeClass}" data-category-id="${category.id}">
+              <strong>${category.icon}</strong>
+              <span>${category.label}</span>
+            </button>
+          `;
+        }).join("");
+      }
+
+      function renderWarning(categoryId) {
+        const readOnly = appState.driveState !== "parked";
+        if (categoryId === "drivingAutonomy") {
+          return `
+            <div class="warning-box">
+              Safety critical area: autonomy settings require driver acknowledgment and are restricted while moving.
+            </div>
+          `;
+        }
+
+        if (categoryId === "energyCharging") {
+          return `
+            <div class="warning-box">
+              Charging thresholds and schedules can affect route range projections. Confirm changes before long routes.
+            </div>
+          `;
+        }
+
+        if (readOnly) {
+          return `
+            <div class="warning-box">
+              Read-only while driving: this vehicle is in ${appState.driveState} state. Park to edit settings.
+            </div>
+          `;
+        }
+
+        return "";
+      }
+
+      function renderControl(item) {
+        if (item.type === "info") {
+          return `
+            <div class="setting-card">
+              <div>
+                <strong>${safeText(item.label)}</strong>
+                <p>Read-only vehicle insight</p>
+              </div>
+              <span>${safeText(item.value)}</span>
+            </div>
+          `;
+        }
+
+        if (item.type === "action") {
+          return `
+            <div class="action-row">
+              <div>
+                <strong>${safeText(item.label)}</strong>
+                <p>${safeText(item.description || "")}</p>
+              </div>
+              <button
+                data-action="${item.action}"
+                class="${item.danger ? "danger" : ""}"
+                ${appState.driveState !== "parked" && item.critical ? "disabled" : ""}
+              >
+                Run
+              </button>
+            </div>
+          `;
+        }
+
+        const disabled = isReadOnly(item);
+        const note = disabled ? `<span class="control-note">Read-only while driving</span>` : "";
+
+        if (item.type === "toggle") {
+          const isOn = Boolean(appState.controls[item.key]);
+          return `
+            <div class="setting-card ${disabled ? "is-disabled" : ""}">
+              <div>
+                <strong>${safeText(item.label)}</strong>
+                <p>${safeText(item.description || "")}</p>
+                ${note}
+              </div>
+              <button
+                class="toggle"
+                data-on="${isOn}"
+                data-control="${item.key}"
+                data-type="toggle"
+                ${disabled ? "disabled" : ""}
+                aria-label="${safeText(item.label)}"
+              ></button>
+            </div>
+          `;
+        }
+
+        if (item.type === "select") {
+          const options = item.options
+            .map((option) => {
+              const selected = appState.controls[item.key] === option ? "selected" : "";
+              return `<option value="${safeText(option)}" ${selected}>${safeText(option)}</option>`;
+            })
+            .join("");
+
+          return `
+            <div class="setting-card ${disabled ? "is-disabled" : ""}">
+              <div>
+                <strong>${safeText(item.label)}</strong>
+                <p>${safeText(item.description || "")}</p>
+                ${note}
+              </div>
+              <select class="select-control" data-control="${item.key}" data-type="select" ${disabled ? "disabled" : ""}>
+                ${options}
+              </select>
+            </div>
+          `;
+        }
+
+        if (item.type === "range") {
+          const value = Number(appState.controls[item.key]);
+          const unit = item.unit || "";
+          return `
+            <div class="setting-card ${disabled ? "is-disabled" : ""}">
+              <div>
+                <strong>${safeText(item.label)}</strong>
+                <p>${safeText(item.description || "")}</p>
+                ${note}
+              </div>
+              <div class="range-wrap">
+                <input
+                  type="range"
+                  class="range-control"
+                  min="${item.min}"
+                  max="${item.max}"
+                  step="${item.step || 1}"
+                  value="${value}"
+                  data-control="${item.key}"
+                  data-type="range"
+                  ${disabled ? "disabled" : ""}
+                />
+                <output>${value} ${safeText(unit)}</output>
+              </div>
+            </div>
+          `;
+        }
+
+        return "";
+      }
+
+      function renderSections() {
+        const category = getCurrentCategory();
+        categoryTitle.textContent = category.label;
+        categoryDescription.textContent = category.description;
+        categoryWarning.innerHTML = renderWarning(category.id);
+
+        sectionList.innerHTML = category.sections
+          .map((section, index) => {
+            const content = section.items.map((item) => renderControl(item)).join("");
+            return `
+              <details class="section-card" ${index === 0 ? "open" : ""}>
+                <summary>
+                  <strong>${safeText(section.title)}</strong>
+                  <em>${safeText(section.status || "")}</em>
+                  <span>${safeText(section.description || "")}</span>
+                </summary>
+                <div class="section-content">${content}</div>
+              </details>
+            `;
+          })
+          .join("");
+      }
+
+      function updateDriveStateDisplay() {
+        const stateMeta = DRIVE_STATES[appState.driveState];
+        gearDisplay.textContent = stateMeta.gear;
+        speedValue.textContent = stateMeta.speed;
+        driveModeLabel.textContent = stateMeta.label;
+
+        const readOnly = appState.driveState !== "parked";
+        readOnlyBadge.textContent = readOnly
+          ? `Read-only mode (${appState.driveState})`
+          : "Editable mode (Parked)";
+        readOnlyBadge.className = `status-pill ${readOnly ? "warn" : "ok"}`;
+
+        document.querySelectorAll("[data-drive-state]").forEach((button) => {
+          button.classList.toggle("active", button.dataset.driveState === appState.driveState);
+        });
+      }
+
+      function openSettings(categoryId) {
+        if (categoryId) {
+          appState.selectedCategory = categoryId;
+        }
+        appState.currentModule = "settings";
+        setDockActive("settings");
+        closeModuleOverlay();
+        appState.settingsOpen = true;
+        settingsOverlay.classList.add("open");
+        settingsOverlay.setAttribute("aria-hidden", "false");
+        renderAll();
+      }
+
+      function closeSettings() {
+        appState.settingsOpen = false;
+        settingsOverlay.classList.remove("open");
+        settingsOverlay.setAttribute("aria-hidden", "true");
+      }
+
+      function openSafetyModal(payload) {
+        appState.pendingSafety = payload;
+        safetyText.textContent = payload.message || "This setting changes safety behavior.";
+        safetyAckCheck.checked = false;
+        safetyAckPhrase.value = "";
+        safetyConfirmButton.disabled = true;
+        safetyModal.classList.add("open");
+      }
+
+      function closeSafetyModal() {
+        appState.pendingSafety = null;
+        safetyModal.classList.remove("open");
+      }
+
+      function updateFeedback(text) {
+        inlineFeedback.textContent = text;
+      }
+
+      function commitControlChange(key, value) {
+        appState.controls[key] = value;
+        renderAll();
+      }
+
+      function requestControlChange(key, nextValue) {
+        const item = CONTROL_INDEX[key];
+        if (!item) {
+          return;
+        }
+
+        if (isReadOnly(item)) {
+          updateFeedback("Changes are blocked while driving. Park the vehicle to edit.");
+          renderAll();
+          return;
+        }
+
+        if (item.safetyGate) {
+          openSafetyModal({
+            key,
+            value: nextValue,
+            message: `${item.label} affects ADAS/autonomy behavior. Driver acknowledgment is required.`
+          });
+          renderAll();
+          return;
+        }
+
+        commitControlChange(key, nextValue);
+        updateFeedback(`${item.label} updated.`);
+      }
+
+      function handleAction(action, danger) {
+        const readOnly = appState.driveState !== "parked";
+        if (readOnly) {
+          updateFeedback("Action blocked while driving. Park to continue.");
+          return;
+        }
+
+        if (action === "checkForUpdates") {
+          updateFeedback("Checking OTA feed... no pending update.");
+          return;
+        }
+
+        if (action === "runDiagnostics") {
+          updateFeedback("Diagnostics completed: no critical faults.");
+          return;
+        }
+
+        if (action === "openAppManager") {
+          updateFeedback("App manager opened (prototype behavior).");
+          return;
+        }
+
+        if (action === "simulateTakeover" || action === "testEmergencyFlow") {
+          openSafetyModal({
+            message: "This simulation can trigger high-priority visual and haptic alerts. Confirm to proceed.",
+            callback: () => updateFeedback("Simulation executed successfully.")
+          });
+          return;
+        }
+
+        if (action === "softReset" || action === "factoryReset" || danger) {
+          openSafetyModal({
+            message: "Reset actions impact profile data and active services. Confirm only when parked.",
+            callback: () =>
+              updateFeedback(action === "factoryReset" ? "Factory reset queued (prototype only)." : "Soft reboot queued.")
+          });
+          return;
+        }
+
+        updateFeedback("Action executed.");
+      }
+
+      function renderAll() {
+        renderCategoryNavigation();
+        renderSections();
+        updateDriveStateDisplay();
+        renderModuleOverlay();
+      }
+
+      document.addEventListener("click", (event) => {
+        const categoryButton = event.target.closest("[data-category-id]");
+        if (categoryButton) {
+          appState.selectedCategory = categoryButton.dataset.categoryId;
+          renderAll();
+          return;
+        }
+
+        const toggle = event.target.closest("[data-type='toggle']");
+        if (toggle) {
+          const key = toggle.dataset.control;
+          const nextValue = !Boolean(appState.controls[key]);
+          requestControlChange(key, nextValue);
+          return;
+        }
+
+        const openSettingsTrigger = event.target.closest("[data-open-settings]");
+        if (openSettingsTrigger) {
+          openSettings(openSettingsTrigger.dataset.openSettings);
+          updateFeedback("Settings opened from contextual entry point.");
+          return;
+        }
+
+        const actionButton = event.target.closest("[data-action]");
+        if (actionButton) {
+          handleAction(actionButton.dataset.action, actionButton.classList.contains("danger"));
+          return;
+        }
+      });
+
+      sectionList.addEventListener("change", (event) => {
+        const control = event.target.closest("[data-control]");
+        if (!control) {
+          return;
+        }
+
+        const key = control.dataset.control;
+        const type = control.dataset.type;
+        let nextValue = control.value;
+
+        if (type === "range") {
+          nextValue = Number(control.value);
+        }
+
+        requestControlChange(key, nextValue);
+      });
+
+      document.getElementById("closeSettingsButton").addEventListener("click", () => {
+        closeSettings();
+        appState.currentModule = "dashboard";
+        setDockActive("dashboard");
+        renderModuleOverlay();
+      });
+
+      document.getElementById("moduleCloseButton").addEventListener("click", () => {
+        appState.currentModule = "dashboard";
+        setDockActive("dashboard");
+        renderModuleOverlay();
+      });
+
+      document.querySelectorAll("[data-module]").forEach((button) => {
+        button.addEventListener("click", () => {
+          switchModule(button.dataset.module);
+        });
+      });
+
+      document.querySelectorAll("[data-drive-state]").forEach((button) => {
+        button.addEventListener("click", () => {
+          appState.driveState = button.dataset.driveState;
+          updateFeedback(
+            appState.driveState === "parked"
+              ? "Vehicle parked. Full settings are editable."
+              : "Vehicle moving. Safety policy switched to read-only."
+          );
+          renderAll();
+        });
+      });
+
+      document.getElementById("themeToggle").addEventListener("click", () => {
+        const isNight = document.body.dataset.theme === "night";
+        document.body.dataset.theme = isNight ? "day" : "night";
+        document.getElementById("themeStatus").textContent = isNight ? "Day UI" : "Night UI";
+      });
+
+      function validateSafetyFields() {
+        const phraseValid = safetyAckPhrase.value.trim().toUpperCase() === "I UNDERSTAND";
+        safetyConfirmButton.disabled = !(safetyAckCheck.checked && phraseValid);
+      }
+
+      safetyAckCheck.addEventListener("change", validateSafetyFields);
+      safetyAckPhrase.addEventListener("input", validateSafetyFields);
+
+      document.getElementById("safetyCancelButton").addEventListener("click", () => {
+        closeSafetyModal();
+        renderAll();
+      });
+
+      document.getElementById("safetyConfirmButton").addEventListener("click", () => {
+        const pending = appState.pendingSafety;
+        if (!pending) {
+          closeSafetyModal();
+          return;
+        }
+
+        if (pending.key) {
+          appState.controls[pending.key] = pending.value;
+          updateFeedback("Safety acknowledgment complete. Setting updated.");
+        }
+
+        if (typeof pending.callback === "function") {
+          pending.callback();
+        }
+
+        closeSafetyModal();
+        renderAll();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && appState.settingsOpen) {
+          closeSettings();
+          appState.currentModule = "dashboard";
+          setDockActive("dashboard");
+          renderModuleOverlay();
+          return;
+        }
+
+        if (event.key === "Escape" && moduleOverlay.classList.contains("open")) {
+          appState.currentModule = "dashboard";
+          setDockActive("dashboard");
+          renderModuleOverlay();
+        }
+      });
+
+      initializeControls();
+      renderAll();
+      setDockActive("dashboard");
+      closeSettings();
+      closeModuleOverlay();
+    </script>
+  </body>
+</html>

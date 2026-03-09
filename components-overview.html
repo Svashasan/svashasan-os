@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DS Components Overview</title>
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+    <style>
+      body { margin: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; background: #f1f5f9; color: #0f172a; }
+      .wrap { max-width: 1180px; margin: 42px auto; padding: 0 20px; }
+      h1 { margin: 0 0 10px; }
+      .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+      .btn { border: none; border-radius: 8px; height: 40px; padding: 0 14px; cursor: pointer; margin-right: 8px; }
+      .b1 { background: #1463ff; color: white; }
+      .b2 { background: #fff; border: 1px solid #cbd5e1; }
+      .field { width: 100%; height: 40px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; }
+      .modal { margin-top: 10px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; box-shadow: 0 8px 18px rgba(15,23,42,.14); }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      th, td { border-bottom: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+      @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>MVP Component Set</h1>
+      <div class="grid">
+        <section class="panel">
+          <h2>Button + TextField</h2>
+          <button class="btn b1">Primary</button>
+          <button class="btn b2">Secondary</button>
+          <div style="height:12px"></div>
+          <input class="field" placeholder="name@company.com" />
+        </section>
+        <section class="panel">
+          <h2>Modal + Drawer Patterns</h2>
+          <div class="modal">
+            <strong>Confirm Action</strong>
+            <p>Apply changes to selected records?</p>
+            <button class="btn b1">Confirm</button>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Table Skeleton</h2>
+          <table>
+            <thead><tr><th>Workflow</th><th>Owner</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Finance Ops</td><td>Priya</td><td>Active</td></tr>
+              <tr><td>Identity Audit</td><td>John</td><td>Paused</td></tr>
+              <tr><td>Retention Sync</td><td>Leah</td><td>Active</td></tr>
+            </tbody>
+          </table>
+        </section>
+        <section class="panel">
+          <h2>A11y Baseline</h2>
+          <ul>
+            <li>Focus-visible outlines</li>
+            <li>Escape handling for overlays</li>
+            <li>ARIA dialog semantics</li>
+            <li>Error messaging for form fields</li>
+          </ul>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
